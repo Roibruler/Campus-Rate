@@ -3,7 +3,7 @@ import { AppreciationService } from './appreciation.service';
 import { CreateAppreciationDto } from './dto/create-appreciation.dto';
 import { UpdateAppreciationDto } from './dto/update-appreciation.dto';
 
-@Controller('appreciation')
+@Controller('appreciations')
 export class AppreciationController {
   constructor(private readonly appreciationService: AppreciationService) {}
 
@@ -19,16 +19,16 @@ export class AppreciationController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.appreciationService.findOne(+id);
+    return this.appreciationService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAppreciationDto: UpdateAppreciationDto) {
-    return this.appreciationService.update(+id, updateAppreciationDto);
+    return this.appreciationService.update(id, updateAppreciationDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.appreciationService.remove(+id);
+    return this.appreciationService.remove(id);
   }
 }

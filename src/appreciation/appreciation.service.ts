@@ -9,18 +9,18 @@ export class AppreciationService {
   }
 
   findAll() {
-    return `This action returns all appreciation`;
+    return `This action returns all appreciations`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} appreciation`;
   }
 
-  update(id: number, updateAppreciationDto: UpdateAppreciationDto) {
+  update(id: string, updateAppreciationDto: UpdateAppreciationDto) {
     return `This action updates a #${id} appreciation`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} appreciation`;
   }
 }

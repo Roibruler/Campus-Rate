@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum, IsDate, IsNumber } from "class-validator";
+import { IsString, IsNotEmpty, IsInt, Min, Max } from "class-validator";
 
 export class CreateAppreciationDto {
     @IsString()
@@ -9,19 +9,12 @@ export class CreateAppreciationDto {
     @IsNotEmpty()
     authorName: string;
 
-    @IsNumber()
-    @IsNotEmpty()
+    @IsInt()
+    @Min(1)
+    @Max(5)
     rating: number;
 
     @IsString()
     @IsNotEmpty()
     comment: string;
-    
-    @IsDate()
-    @IsNotEmpty()
-    createdAt: Date; // toISOString() donne le format ISO 8601
-    
-    @IsDate()
-    @IsNotEmpty()
-    updatedAt: Date; // toISOString() donne le format ISO 8601
 }

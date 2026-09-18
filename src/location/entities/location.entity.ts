@@ -2,7 +2,7 @@ import { LocationCategory } from '../enum/location.enum';
 import { LocationStatus } from '../enum/status.enum';
 
 export class Location {
-    id: number;
+    id: string;
     name: string;
     description: string;
     category: LocationCategory;
@@ -10,7 +10,7 @@ export class Location {
     services: string[];
     status: LocationStatus;
     averageRating: number | null;
-    reviewCount : number;
-    createdAt: Date; // toISOString() donne le format ISO 8601
-    updatedAt: Date; // toISOString() donne le format ISO 8601
+    reviewCount: number;
+    createdAt: Date;
+    updatedAt: Date;
 }

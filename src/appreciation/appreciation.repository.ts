@@ -1,8 +1,9 @@
-// appreciationRepository.ts
-import { lireJSON, ecrireJSON, prochainId } from '../utils/file.Json';
+import { lireJSON, ecrireJSON } from '../utils/file.Json';
+import { generateId } from '../utils/id.util';
 import { Appreciation } from './entities/appreciation.entity';
 
 const CHEMIN_APPRECIATIONS = 'appreciation.json';
+const PREFIXE_ID = 'apr';
 
 export async function lireAppreciations(): Promise<Appreciation[]> {
     return lireJSON<Appreciation>(CHEMIN_APPRECIATIONS);
@@ -20,7 +21,7 @@ export async function ajouterAppreciation(
 
     const nouvelleAppreciation: Appreciation = {
         ...donnees,
-        id: prochainId(appreciations),
+        id: generateId(PREFIXE_ID),
         createdAt: maintenant,
         updatedAt: maintenant,
     };

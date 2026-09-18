@@ -1,5 +1,5 @@
 export class Appreciation {
-    id: number;
+    id: string;
     placeId: string;
     authorName: string;
     rating: number;

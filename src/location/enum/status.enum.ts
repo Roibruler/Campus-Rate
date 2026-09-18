@@ -1,5 +1,5 @@
 export enum LocationStatus {
-    ACTIVE, 
-    TEMPORARILY_CLOSED, 
-    INACTIVE
+    ACTIVE = 'ACTIVE',
+    TEMPORARILY_CLOSED = 'TEMPORARILY_CLOSED',
+    INACTIVE = 'INACTIVE',
 }

@@ -1,4 +1,3 @@
-// jsonStore.ts
 import { readFile, writeFile } from 'node:fs/promises';
 
 const CHAMPS_DATE = ['createdAt', 'updatedAt'] as const;
@@ -25,13 +24,4 @@ export async function lireJSON<T>(chemin: string): Promise<T[]> {
 
 export async function ecrireJSON<T>(chemin: string, donnees: T[]): Promise<void> {
     await writeFile(chemin, JSON.stringify(donnees, null, 2), 'utf-8');
-}
-
-/**
- * Calcule le prochain id disponible pour une liste d'objets ayant un champ `id: number`.
- * Retourne 1 si la liste est vide.
- */
-export function prochainId<T extends { id: number }>(items: T[]): number {
-    if (items.length === 0) return 1;
-    return Math.max(...items.map((item) => item.id)) + 1;
 }
