@@ -32,6 +32,7 @@ export async function ajouterAppreciation(
     return nouvelleAppreciation;
 }
 
+
 export async function lireAppreciationsParLieu(placeId: string): Promise<Appreciation[]> {
     const toutes = await lireAppreciations();
     return toutes.filter((a) => a.placeId === placeId);
