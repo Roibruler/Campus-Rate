@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpCode, HttpStatus } from '@nestjs/common';
+import type { Response } from 'express';
 import { AppreciationService } from './appreciation.service';
 import { CreateAppreciationDto } from './dto/create-appreciation.dto';
 import { UpdateAppreciationDto } from './dto/update-appreciation.dto';
@@ -8,8 +9,13 @@ export class AppreciationController {
   constructor(private readonly appreciationService: AppreciationService) {}
 
   @Post()
-  create(@Body() createAppreciationDto: CreateAppreciationDto) {
-    return this.appreciationService.create(createAppreciationDto);
+  async create(
+    @Body() createAppreciationDto: CreateAppreciationDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const appreciation = await this.appreciationService.create(createAppreciationDto);
+    res.location(`/v1/appreciations/${appreciation.id}`);
+    return appreciation;
   }
 
   @Get()
@@ -28,6 +34,7 @@ export class AppreciationController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
     return this.appreciationService.remove(id);
   }

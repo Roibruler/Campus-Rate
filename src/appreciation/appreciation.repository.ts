@@ -1,16 +1,16 @@
 import { lireJSON, ecrireJSON } from '../utils/file.Json';
 import { generateId } from '../utils/id.util';
 import { Appreciation } from './entities/appreciation.entity';
+import { obtenirCheminDonnees } from '../location/../config/data-path.util';
 
-const CHEMIN_APPRECIATIONS = 'appreciation.json';
 const PREFIXE_ID = 'apr';
 
 export async function lireAppreciations(): Promise<Appreciation[]> {
-    return lireJSON<Appreciation>(CHEMIN_APPRECIATIONS);
+    return lireJSON<Appreciation>(obtenirCheminDonnees('appreciation.json'));
 }
 
 export async function ecrireAppreciations(appreciations: Appreciation[]): Promise<void> {
-    return ecrireJSON<Appreciation>(CHEMIN_APPRECIATIONS, appreciations);
+    return ecrireJSON<Appreciation>(obtenirCheminDonnees('appreciation.json'), appreciations);
 }
 
 export async function ajouterAppreciation(
@@ -36,4 +36,40 @@ export async function ajouterAppreciation(
 export async function lireAppreciationsParLieu(placeId: string): Promise<Appreciation[]> {
     const toutes = await lireAppreciations();
     return toutes.filter((a) => a.placeId === placeId);
+}
+
+export async function trouverAppreciationParId(id: string): Promise<Appreciation | undefined> {
+    const appreciations = await lireAppreciations();
+    return appreciations.find((a) => a.id === id);
+}
+
+export async function mettreAJourAppreciation(
+    id: string,
+    donnees: Partial<Omit<Appreciation, 'id' | 'createdAt' | 'placeId'>>
+): Promise<Appreciation | undefined> {
+    const appreciations = await lireAppreciations();
+    const index = appreciations.findIndex((a) => a.id === id);
+    if (index === -1) return undefined;
+
+    const appreciationMiseAJour: Appreciation = {
+        ...appreciations[index],
+        ...donnees,
+        updatedAt: new Date(),
+    };
+
+    appreciations[index] = appreciationMiseAJour;
+    await ecrireAppreciations(appreciations);
+
+    return appreciationMiseAJour;
+}
+
+export async function supprimerAppreciation(id: string): Promise<boolean> {
+    const appreciations = await lireAppreciations();
+    const index = appreciations.findIndex((a) => a.id === id);
+    if (index === -1) return false;
+
+    appreciations.splice(index, 1);
+    await ecrireAppreciations(appreciations);
+
+    return true;
 }
