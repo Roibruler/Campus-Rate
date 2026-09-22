@@ -6,14 +6,8 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { ProblemDetailsDto } from '../dto/problem-details.dto';
 
-interface ProblemDetails {
-    type: string;
-    title: string;
-    status: number;
-    detail: string;
-    instance: string;
-}
 
 @Catch()
 export class ProblemDetailsFilter implements ExceptionFilter {
@@ -24,7 +18,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
 
         const { status, title, detail } = this.analyserException(exception);
 
-        const problemDetails: ProblemDetails = {
+        const problemDetails: ProblemDetailsDto  = {
             type: 'about:blank',
             title,
             status,
@@ -34,7 +28,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
 
         response
             .status(status)
-            .contentType('application/problem+json')
+            .contentType('application/problem+json') // Comme demandé mais pas sûr que ça soit nécessaire
             .send(JSON.stringify(problemDetails));
     }
 
