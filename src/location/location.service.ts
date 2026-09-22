@@ -10,6 +10,9 @@ import {
     supprimerLocation,
 } from './location.repository';
 import { lireAppreciationsParLieu } from '../appreciation/appreciation.repository';
+import { FindAllLocationsDto } from './dto/find-all-locations.dto';
+import { PaginatedResult } from '../common/pagination.interface';
+import { Location } from './entities/location.entity';
 
 @Injectable()
 export class LocationService {
@@ -21,8 +24,25 @@ export class LocationService {
     });
   }
 
-  async findAll() {
-    return lireLocations();
+  async findAll(query: FindAllLocationsDto): Promise<PaginatedResult<Location>> {
+    const toutes = await lireLocations();
+
+    const filtrees = query.category
+      ? toutes.filter((l) => l.category === query.category)
+      : toutes;
+
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const totalItems = filtrees.length;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    const debut = (page - 1) * limit;
+    const data = filtrees.slice(debut, debut + limit);
+
+    return {
+      data,
+      pagination: { page, limit, totalItems, totalPages },
+    };
   }
 
   async findOne(id: string) {

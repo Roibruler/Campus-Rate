@@ -1,8 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import { LocationService } from './location.service';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
+import { ApiQuery } from '@nestjs/swagger';
+import { LocationCategory } from './enum/location.enum';
+import { FindAllLocationsDto } from './dto/find-all-locations.dto';
 
 @Controller('locations')
 export class LocationController {
@@ -19,8 +22,11 @@ export class LocationController {
   }
 
   @Get()
-  findAll() {
-    return this.locationService.findAll();
+  @ApiQuery({ name: 'category', enum: LocationCategory, required: false })
+  @ApiQuery({ name: 'page', type: Number, required: false, example: 1 })
+  @ApiQuery({ name: 'limit', type: Number, required: false, example: 10 })
+  findAll(@Query() query: FindAllLocationsDto) {
+    return this.locationService.findAll(query);
   }
 
   @Get(':id')
