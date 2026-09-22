@@ -1,6 +1,6 @@
 import { LocationCategory } from "../enum/location.enum";
 import { LocationStatus } from "../enum/status.enum";
-import { IsString, IsNotEmpty, IsEnum, IsArray, IsOptional } from "class-validator";
+import { IsString, IsNotEmpty, IsEnum, IsArray, IsOptional, ArrayUnique } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateLocationDto {
@@ -28,8 +28,9 @@ export class CreateLocationDto {
     @IsOptional()
     @IsArray()
     @IsString({ each: true })
+    @ArrayUnique()
     services?: string[];
-
+    
     @ApiProperty({ enum: LocationStatus, example: LocationStatus.ACTIVE, required: false })
     @IsOptional()
     @IsEnum(LocationStatus)
