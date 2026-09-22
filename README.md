@@ -1,114 +1,84 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# CampusRate
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST pour consulter et noter des endroits/services du campus. Fait pour le TP1 du cours 420-514.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## C'est quoi
 
-## Description
+On peut créer des endroits (locations) et laisser des appréciations (avec une note) sur ces endroits. La note moyenne et le nombre d'appréciations sont recalculés automatiquement à chaque fois qu'une appréciation est ajoutée, modifiée ou supprimée.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Un endroit qui a encore des appréciations ne peut pas être supprimé (erreur 409).
 
-## Project setup
+## Technologies
+
+- NestJS (TypeScript)
+- class-validator / class-transformer pour la validation
+- @nestjs/swagger pour la doc OpenAPI
+- @nestjs/config pour la configuration par variables d'environnement
+- node:fs/promises pour la persistance JSON
+- Postman pour les tests manuels
+
+## Installation
 
 ```bash
-$ npm install
+npm ci
 ```
 
-## Compile and run the project
+Copier `.env.example` en `.env` :
+PORT=3000
+DATA_FILE_PATH=./data
+
+Le serveur refuse de démarrer si le `.env` est manquant ou invalide.
+
+## Lancer le projet
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run start:dev
 ```
 
-## Run tests
+L'API tourne sur `http://localhost:3000/v1`.
+
+La doc Swagger est sur `http://localhost:3000/api` — c'est là qu'on peut tester chaque route directement dans le navigateur.
+
+## Qualité du code
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run lint
+npm run build
 ```
 
-## Deployment
+## Routes
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+**Locations**
+- `POST /v1/locations` — créer un endroit
+- `GET /v1/locations` — lister les endroits (filtre `category`, pagination `page`/`limit`, max 50 par page)
+- `GET /v1/locations/:id` — voir un endroit
+- `PATCH /v1/locations/:id` — modifier un endroit
+- `DELETE /v1/locations/:id` — supprimer un endroit (refusé si des appréciations y sont encore rattachées)
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+**Appreciations**
+- `POST /v1/appreciations` — ajouter une appréciation (commentaire entre 5 et 500 caractères)
+- `GET /v1/appreciations` — lister les appréciations (filtre optionnel `placeId`)
+- `GET /v1/appreciations/:id` — voir une appréciation
+- `PATCH /v1/appreciations/:id` — modifier une appréciation
+- `DELETE /v1/appreciations/:id` — supprimer une appréciation
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+Un endroit sans appréciation a `averageRating: null` et `reviewCount: 0`. Une location sans `status` précisé prend `ACTIVE` par défaut, et `services` prend `[]` par défaut (pas de doublons acceptés).
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Les erreurs reviennent au format `application/problem+json` (type, title, status, detail).
 
-## Observability
+## Mes choix de design
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+| Décision | Choix | Pourquoi |
+|---|---|---|
+| Noms de ressources | `locations`, `appreciations` (anglais, pluriel, sans verbe) | Cohérent avec les modules NestJS, pas de renommage inutile en `places`/`reviews` |
+| Id | `loc_<uuid>` / `apr_<uuid>`, générés par `crypto.randomUUID()` côté serveur | Le préfixe identifie tout de suite le type de ressource; pas d'id séquentiel pour éviter les collisions |
+| Versionnement | `/v1` via le système de versionnement de NestJS (`VersioningType.URI`) | Convention uniforme, extensible si une v2 arrive un jour |
+| Imbrication | Pas d'URI imbriquée (`/locations/:id/appreciations`) | Une appréciation a son propre cycle de vie (consultable/modifiable seule); le lien se fait par `placeId` dans le corps et comme filtre optionnel sur `GET /appreciations` |
+| Codes de succès | `201` + en-tête `Location`, `200`, `204` sans corps | Sémantique HTTP standard selon l'opération |
+| Codes d'erreur | `400`/`404`/`409`/`500` en Problem Details | Un filtre global reformate toutes les exceptions, sans jamais exposer de détail technique brut |
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+## Limites connues
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- La persistance se fait dans des fichiers JSON, donc pas fait pour des écritures concurrentes à haute fréquence.
+- Pas d'authentification — n'importe qui peut créer/modifier/supprimer.
+- Le filtre sur les locations ne supporte que `category`, pas de recherche texte.
