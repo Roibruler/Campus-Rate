@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
-import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AppreciationService } from './appreciation.service';
 import { CreateAppreciationDto } from './dto/create-appreciation.dto';
 import { UpdateAppreciationDto } from './dto/update-appreciation.dto';
@@ -27,10 +27,11 @@ export class AppreciationController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Lister toutes les appréciations' })
+  @ApiOperation({ summary: "Lister les appréciations, avec filtre optionnel par endroit" })
+  @ApiQuery({ name: 'placeId', required: false, description: "Filtrer les appréciations d'un endroit précis" })
   @ApiResponse({ status: 200, description: 'Liste des appréciations', type: [Appreciation] })
-  findAll() {
-    return this.appreciationService.findAll();
+  findAll(@Query('placeId') placeId?: string) {
+    return this.appreciationService.findAll(placeId);
   }
 
   @Get(':id')

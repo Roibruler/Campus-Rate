@@ -27,8 +27,8 @@ export class AppreciationService {
     return appreciation;
   }
 
-  async findAll() {
-    return lireAppreciations();
+  async findAll(placeId?: string) {
+    return placeId ? lireAppreciationsParLieu(placeId) : lireAppreciations();
   }
 
   async findOne(id: string) {
