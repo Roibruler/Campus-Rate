@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsInt, Min, Max } from "class-validator";
+import { IsString, IsNotEmpty, IsInt, Min, Max, MaxLength, MinLength } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateAppreciationDto {
@@ -18,8 +18,10 @@ export class CreateAppreciationDto {
     @Max(5)
     rating: number;
 
-    @ApiProperty({ example: "Calme et Wi-Fi stable." })
+    @ApiProperty({ example: "Calme et Wi-Fi stable.", minLength: 5, maxLength: 500 })
     @IsString()
     @IsNotEmpty()
+    @MinLength(5)
+    @MaxLength(500)
     comment: string;
 }
