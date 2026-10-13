@@ -1,16 +1,11 @@
 {
   "info": {
-    "_postman_id": "b6f2a6b0-6e6a-4b6e-9c1a-campusrate001",
+    "_postman_id": "f57536fb-9b46-4b50-aa9a-6c275f8981d1",
     "name": "CampusRate - Scénarios de tests manuels",
-    "description": "Collection de 10 scénarios représentatifs couvrant les exigences de la section 9 du TP1 CampusRate : création/consultation des deux ressources, modification, suppression permise, note invalide, ressource inexistante, conflit de suppression, filtre, pagination, erreur Problem Details et persistance après redémarrage.\n\nÀ exécuter dans l'ordre (dossier 1 à 10), le serveur NestJS devant tourner localement sur le port 3000 (`npm run start:dev`). Les ids créés sont capturés automatiquement dans des variables de collection et réutilisés par les requêtes suivantes.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "description": "Collection de 13 scénarios couvrant les exigences de la section 6.1 du TP2 CampusRate : création/consultation des deux ressources, propriété obligatoire absente, propriété interdite envoyée par le client, modification valide, modification d'un champ contrôlé par le serveur, suppression permise, note invalide, ressource inexistante, conflit de suppression, filtre, pagination, erreur Problem Details et persistance dans MongoDB après redémarrage.\n\nÀ exécuter dans l'ordre (dossier 1 à 10), le serveur NestJS devant tourner localement sur le port 3000 (npm run start:dev) avec une connexion à MongoDB. Les ids créés sont capturés automatiquement dans des variables de collection et réutilisés par les requêtes suivantes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53824828"
   },
-  "variable": [
-    { "key": "baseUrl", "value": "http://localhost:3000/v1", "type": "string" },
-    { "key": "locationId", "value": "", "type": "string" },
-    { "key": "appreciationId", "value": "", "type": "string" },
-    { "key": "persistenceLocationId", "value": "", "type": "string" }
-  ],
   "item": [
     {
       "name": "1. Créer et consulter un endroit",
@@ -45,15 +40,119 @@
           ],
           "request": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Bibliothèque principale\",\n  \"description\": \"Espace calme avec prises.\",\n  \"category\": \"STUDY_SPACE\",\n  \"address\": \"Pavillon A, local A-210\",\n  \"services\": [\"WIFI\", \"POWER_OUTLETS\"],\n  \"status\": \"ACTIVE\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/locations", "host": ["{{baseUrl}}"], "path": ["locations"] },
+            "url": {
+              "raw": "{{baseUrl}}/locations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations"
+              ]
+            },
             "description": "Vérifie : création d'un endroit, code 201, en-tête Location, averageRating null / reviewCount 0 par défaut."
-          }
+          },
+          "response": []
+        },
+        {
+          "name": "1b. Créer un endroit - propriété obligatoire absente (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400 Bad Request\", function () {\n    pm.response.to.have.status(400);\n});\n\nconst jsonData = pm.response.json();\npm.test(\"Le message d'erreur mentionne le champ 'name'\", function () {\n    pm.expect(jsonData.detail).to.include(\"name\");\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Espace calme avec prises.\",\n  \"category\": \"STUDY_SPACE\",\n  \"address\": \"Pavillon A, local A-210\",\n  \"services\": [\"WIFI\", \"POWER_OUTLETS\"],\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/locations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations"
+              ]
+            },
+            "description": "Vérifie : création d'un endroit sans le champ obligatoire \"name\", code 400 au format Problem Details."
+          },
+          "response": []
+        },
+        {
+          "name": "1c. Créer un endroit - propriété interdite (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400 Bad Request\", function () {\n    pm.response.to.have.status(400);\n});\n\nconst jsonData = pm.response.json();\npm.test(\"Le message d'erreur mentionne la propriété interdite\", function () {\n    pm.expect(jsonData.detail).to.include(\"averageRating\");\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bibliothèque principale\",\n  \"description\": \"Espace calme avec prises.\",\n  \"category\": \"STUDY_SPACE\",\n  \"address\": \"Pavillon A, local A-210\",\n  \"services\": [\"WIFI\", \"POWER_OUTLETS\"],\n  \"status\": \"ACTIVE\",\n  \"averageRating\": 4.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/locations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations"
+              ]
+            },
+            "description": "Vérifie : création d'un endroit avec une propriété gérée par le serveur (averageRating) envoyée par le client, code 400 au format Problem Details."
+          },
+          "response": []
         },
         {
           "name": "Consulter l'endroit créé",
@@ -78,9 +177,19 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/locations/{{locationId}}", "host": ["{{baseUrl}}"], "path": ["locations", "{{locationId}}"] },
+            "url": {
+              "raw": "{{baseUrl}}/locations/{{locationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations",
+                "{{locationId}}"
+              ]
+            },
             "description": "Vérifie : consultation d'un endroit par son id, code 200."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -115,15 +224,33 @@
           ],
           "request": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"placeId\": \"{{locationId}}\",\n  \"authorName\": \"Samira\",\n  \"rating\": 4,\n  \"comment\": \"Calme et Wi-Fi stable.\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/appreciations", "host": ["{{baseUrl}}"], "path": ["appreciations"] },
+            "url": {
+              "raw": "{{baseUrl}}/appreciations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "appreciations"
+              ]
+            },
             "description": "Vérifie : création d'une appréciation liée à un endroit existant, code 201, en-tête Location."
-          }
+          },
+          "response": []
         },
         {
           "name": "Consulter l'appréciation créée",
@@ -143,9 +270,19 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/appreciations/{{appreciationId}}", "host": ["{{baseUrl}}"], "path": ["appreciations", "{{appreciationId}}"] },
+            "url": {
+              "raw": "{{baseUrl}}/appreciations/{{appreciationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "appreciations",
+                "{{appreciationId}}"
+              ]
+            },
             "description": "Vérifie : consultation d'une appréciation par son id, code 200."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -172,9 +309,19 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/locations/{{locationId}}", "host": ["{{baseUrl}}"], "path": ["locations", "{{locationId}}"] },
+            "url": {
+              "raw": "{{baseUrl}}/locations/{{locationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations",
+                "{{locationId}}"
+              ]
+            },
             "description": "Vérifie : averageRating et reviewCount sont recalculés automatiquement après la création d'une appréciation."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -203,15 +350,78 @@
           ],
           "request": {
             "method": "PATCH",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"TEMPORARILY_CLOSED\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/locations/{{locationId}}", "host": ["{{baseUrl}}"], "path": ["locations", "{{locationId}}"] },
+            "url": {
+              "raw": "{{baseUrl}}/locations/{{locationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations",
+                "{{locationId}}"
+              ]
+            },
             "description": "Vérifie : modification partielle (PATCH) d'un endroit, code 200."
-          }
+          },
+          "response": []
+        },
+        {
+          "name": "4b. Modifier un endroit - champ contrôlé interdit (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400 Bad Request\", function () {\n    pm.response.to.have.status(400);\n});\n\nconst jsonData = pm.response.json();\npm.test(\"Le message d'erreur mentionne la propriété interdite\", function () {\n    pm.expect(jsonData.detail).to.include(\"reviewCount\");\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reviewCount\": 999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/locations/{{locationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations",
+                "{{locationId}}"
+              ]
+            },
+            "description": "Vérifie : tentative de modification d'un champ contrôlé par le serveur (reviewCount) via PATCH, code 400 au format Problem Details."
+          },
+          "response": []
         }
       ]
     },
@@ -248,16 +458,30 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/locations?category=STUDY_SPACE&page=1&limit=5",
-              "host": ["{{baseUrl}}"],
-              "path": ["locations"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations"
+              ],
               "query": [
-                { "key": "category", "value": "STUDY_SPACE" },
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "5" }
+                {
+                  "key": "category",
+                  "value": "STUDY_SPACE"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
               ]
             },
             "description": "Vérifie : filtre par catégorie et pagination combinés, format de réponse { data, pagination }."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -291,15 +515,33 @@
           ],
           "request": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"placeId\": \"{{locationId}}\",\n  \"authorName\": \"Test\",\n  \"rating\": 10,\n  \"comment\": \"Note invalide\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/appreciations", "host": ["{{baseUrl}}"], "path": ["appreciations"] },
+            "url": {
+              "raw": "{{baseUrl}}/appreciations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "appreciations"
+              ]
+            },
             "description": "Vérifie : validation métier (rating doit être entre 1 et 5), code 400 au format Problem Details."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -330,9 +572,19 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/locations/loc_00000000-0000-0000-0000-000000000000", "host": ["{{baseUrl}}"], "path": ["locations", "loc_00000000-0000-0000-0000-000000000000"] },
+            "url": {
+              "raw": "{{baseUrl}}/locations/loc_00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations",
+                "loc_00000000-0000-0000-0000-000000000000"
+              ]
+            },
             "description": "Vérifie : ressource inexistante, code 404 au format Problem Details."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -363,9 +615,19 @@
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/locations/{{locationId}}", "host": ["{{baseUrl}}"], "path": ["locations", "{{locationId}}"] },
+            "url": {
+              "raw": "{{baseUrl}}/locations/{{locationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations",
+                "{{locationId}}"
+              ]
+            },
             "description": "Vérifie : refus de suppression d'un endroit qui a encore des appréciations, code 409 au format Problem Details. (L'appréciation créée au scénario 2 existe encore à ce stade.)"
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -390,9 +652,19 @@
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/appreciations/{{appreciationId}}", "host": ["{{baseUrl}}"], "path": ["appreciations", "{{appreciationId}}"] },
+            "url": {
+              "raw": "{{baseUrl}}/appreciations/{{appreciationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "appreciations",
+                "{{appreciationId}}"
+              ]
+            },
             "description": "Retire l'appréciation, ce qui doit permettre la suppression de l'endroit juste après."
-          }
+          },
+          "response": []
         },
         {
           "name": "Supprimer l'endroit (maintenant permis)",
@@ -412,9 +684,19 @@
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/locations/{{locationId}}", "host": ["{{baseUrl}}"], "path": ["locations", "{{locationId}}"] },
+            "url": {
+              "raw": "{{baseUrl}}/locations/{{locationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations",
+                "{{locationId}}"
+              ]
+            },
             "description": "Vérifie : suppression permise une fois qu'il n'y a plus d'appréciation associée, code 204 sans corps."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -441,15 +723,33 @@
           ],
           "request": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Local témoin - test de persistance\",\n  \"description\": \"Créé pour vérifier que les données survivent à un redémarrage du serveur.\",\n  \"category\": \"OTHER\",\n  \"address\": \"N/A\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/locations", "host": ["{{baseUrl}}"], "path": ["locations"] },
+            "url": {
+              "raw": "{{baseUrl}}/locations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations"
+              ]
+            },
             "description": "IMPORTANT : après avoir exécuté cette requête, arrête le serveur (Ctrl+C dans le terminal) puis relance-le (npm run start:dev) AVANT d'exécuter la requête suivante de ce dossier."
-          }
+          },
+          "response": []
         },
         {
           "name": "Vérifier que la location existe toujours après redémarrage",
@@ -459,11 +759,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"La location créée avant redémarrage existe toujours\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.id).to.equal(pm.collectionVariables.get(\"persistenceLocationId\"));",
-                  "});"
+                  "pm.test(\"La location créée avant redémarrage existe toujours\", function () {\n    pm.response.to.have.status(200);\n    const jsonData = pm.response.json();\n    pm.expect(jsonData.id).to.equal(pm.collectionVariables.get(\"persistenceLocationId\"));\n});"
                 ]
               }
             }
@@ -471,11 +767,39 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/locations/{{persistenceLocationId}}", "host": ["{{baseUrl}}"], "path": ["locations", "{{persistenceLocationId}}"] },
-            "description": "À exécuter seulement APRÈS avoir redémarré le serveur suite à la requête précédente. Confirme que location.json a bien persisté sur disque entre les deux exécutions."
-          }
+            "url": {
+              "raw": "{{baseUrl}}/locations/{{persistenceLocationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "locations",
+                "{{persistenceLocationId}}"
+              ]
+            },
+            "description": "Confirme que les données sont bien persistées dans MongoDB entre deux redémarrages du serveur (arrêter le serveur, le redémarrer, puis refaire un GET sur la même location)."
+          },
+          "response": []
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/v1"
+    },
+    {
+      "key": "locationId",
+      "value": ""
+    },
+    {
+      "key": "appreciationId",
+      "value": ""
+    },
+    {
+      "key": "persistenceLocationId",
+      "value": ""
     }
   ]
 }
