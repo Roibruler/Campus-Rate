@@ -1,38 +1,40 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { CreateAppreciationDto } from './dto/create-appreciation.dto';
 import { UpdateAppreciationDto } from './dto/update-appreciation.dto';
-import {
-    ajouterAppreciation,
-    lireAppreciations,
-    trouverAppreciationParId,
-    mettreAJourAppreciation,
-    supprimerAppreciation,
-    lireAppreciationsParLieu,
-} from './appreciation.repository';
-import { trouverLocationParId, mettreAJourLocation } from '../location/location.repository';
+import { AppreciationRepository } from './appreciation.repository';
+import { Location } from '../location/entities/location.entity';
 
 @Injectable()
 export class AppreciationService {
+  constructor(
+    private readonly appreciationRepository: AppreciationRepository,
+    @InjectModel(Location.name) private readonly locationModel: Model<Location>,
+  ) { }
+
   async create(createAppreciationDto: CreateAppreciationDto) {
-    const location = await trouverLocationParId(createAppreciationDto.placeId);
+    const location = await this.locationModel.findOne({ id: createAppreciationDto.placeId }).exec();
     if (!location) {
       throw new NotFoundException(
         `Aucune location trouvée avec l'id ${createAppreciationDto.placeId}`,
       );
     }
 
-    const appreciation = await ajouterAppreciation(createAppreciationDto);
+    const appreciation = await this.appreciationRepository.create(createAppreciationDto);
     await this.recalculerStatistiques(createAppreciationDto.placeId);
 
     return appreciation;
   }
 
   async findAll(placeId?: string) {
-    return placeId ? lireAppreciationsParLieu(placeId) : lireAppreciations();
+    return placeId
+      ? this.appreciationRepository.findByPlaceId(placeId)
+      : this.appreciationRepository.findAll();
   }
 
   async findOne(id: string) {
-    const appreciation = await trouverAppreciationParId(id);
+    const appreciation = await this.appreciationRepository.findById(id);
     if (!appreciation) {
       throw new NotFoundException(`Aucune appréciation trouvée avec l'id ${id}`);
     }
@@ -41,9 +43,9 @@ export class AppreciationService {
 
   async update(id: string, updateAppreciationDto: UpdateAppreciationDto) {
     // placeId n'est jamais modifiable, même si le client l'envoie dans le body
-    const { placeId, ...donneesModifiables } = updateAppreciationDto;
+    const { placeId: _placeId, ...donneesModifiables } = updateAppreciationDto;
 
-    const appreciation = await mettreAJourAppreciation(id, donneesModifiables);
+    const appreciation = await this.appreciationRepository.update(id, donneesModifiables);
     if (!appreciation) {
       throw new NotFoundException(`Aucune appréciation trouvée avec l'id ${id}`);
     }
@@ -54,25 +56,25 @@ export class AppreciationService {
   }
 
   async remove(id: string) {
-    const appreciation = await trouverAppreciationParId(id);
+    const appreciation = await this.appreciationRepository.findById(id);
     if (!appreciation) {
       throw new NotFoundException(`Aucune appréciation trouvée avec l'id ${id}`);
     }
 
-    await supprimerAppreciation(id);
+    await this.appreciationRepository.delete(id);
     await this.recalculerStatistiques(appreciation.placeId);
   }
 
   private async recalculerStatistiques(placeId: string): Promise<void> {
-    const appreciations = await lireAppreciationsParLieu(placeId);
+    const appreciations = await this.appreciationRepository.findByPlaceId(placeId);
     const reviewCount = appreciations.length;
     const averageRating =
       reviewCount === 0
         ? null
         : Math.round(
-            (appreciations.reduce((somme, a) => somme + a.rating, 0) / reviewCount) * 100,
-          ) / 100;
+          (appreciations.reduce((somme, a) => somme + a.rating, 0) / reviewCount) * 100,
+        ) / 100;
 
-    await mettreAJourLocation(placeId, { averageRating, reviewCount });
+    await this.locationModel.findOneAndUpdate({ id: placeId }, { averageRating, reviewCount }).exec();
   }
 }

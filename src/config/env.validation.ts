@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsString, Max, Min, validateSync } from 'class-validator';
+import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min, validateSync } from 'class-validator';
 
 class EnvironmentVariables {
     @IsInt()
@@ -9,7 +9,15 @@ class EnvironmentVariables {
 
     @IsString()
     @IsNotEmpty()
-    DATA_FILE_PATH: string;
+    MONGO_URI: string;
+
+    @IsOptional()
+    @IsIn(['development', 'production', 'test'])
+    NODE_ENV?: string;
+
+    @IsOptional()
+    @IsString()
+    CORS_ORIGINS?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

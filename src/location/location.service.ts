@@ -1,31 +1,35 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationStatus } from './enum/status.enum';
-import {
-    ajouterLocation,
-    lireLocations,
-    trouverLocationParId,
-    mettreAJourLocation,
-    supprimerLocation,
-} from './location.repository';
-import { lireAppreciationsParLieu } from '../appreciation/appreciation.repository';
+import { LocationRepository } from './location.repository';
+import { Appreciation } from '../appreciation/entities/appreciation.entity';
 import { FindAllLocationsDto } from './dto/find-all-locations.dto';
 import { PaginatedResult } from '../common/pagination.interface';
 import { Location } from './entities/location.entity';
 
 @Injectable()
 export class LocationService {
+  constructor(
+    private readonly locationRepository: LocationRepository,
+    @InjectModel(Appreciation.name) private readonly appreciationModel: Model<Appreciation>,
+  ) {}
+
   async create(createLocationDto: CreateLocationDto) {
-    return ajouterLocation({
-      ...createLocationDto,
+    return this.locationRepository.create({
+      name: createLocationDto.name,
+      description: createLocationDto.description,
+      category: createLocationDto.category,
+      address: createLocationDto.address,
       services: createLocationDto.services ?? [],
       status: createLocationDto.status ?? LocationStatus.ACTIVE,
     });
   }
 
   async findAll(query: FindAllLocationsDto): Promise<PaginatedResult<Location>> {
-    const toutes = await lireLocations();
+    const toutes = await this.locationRepository.findAll();
 
     const filtrees = query.category
       ? toutes.filter((l) => l.category === query.category)
@@ -46,7 +50,7 @@ export class LocationService {
   }
 
   async findOne(id: string) {
-    const location = await trouverLocationParId(id);
+    const location = await this.locationRepository.findById(id);
     if (!location) {
       throw new NotFoundException(`Aucune location trouvée avec l'id ${id}`);
     }
@@ -54,7 +58,7 @@ export class LocationService {
   }
 
   async update(id: string, updateLocationDto: UpdateLocationDto) {
-    const location = await mettreAJourLocation(id, updateLocationDto);
+    const location = await this.locationRepository.update(id, updateLocationDto);
     if (!location) {
       throw new NotFoundException(`Aucune location trouvée avec l'id ${id}`);
     }
@@ -62,14 +66,14 @@ export class LocationService {
   }
 
   async remove(id: string) {
-    const appreciationsLiees = await lireAppreciationsParLieu(id);
+    const appreciationsLiees = await this.appreciationModel.find({ placeId: id }).exec();
     if (appreciationsLiees.length > 0) {
       throw new ConflictException(
         `Impossible de supprimer la location ${id} : des appréciations y sont encore associées`,
       );
     }
 
-    const supprimee = await supprimerLocation(id);
+    const supprimee = await this.locationRepository.delete(id);
     if (!supprimee) {
       throw new NotFoundException(`Aucune location trouvée avec l'id ${id}`);
     }

@@ -3,10 +3,31 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
 import { ProblemDetailsFilter } from './common/filters/problem-details.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create(AppModule);
+
+  const configService = app.get(ConfigService);
+  const nodeEnv = configService.get<string>('NODE_ENV') ?? 'development';
+
+  app.use(helmet());
+
+  const corsOrigins = (configService.get<string>('CORS_ORIGINS') ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (nodeEnv === 'production' && corsOrigins.length === 0) {
+    throw new Error(
+      "CORS_ORIGINS doit être défini explicitement lorsque NODE_ENV=production.",
+    );
+  }
+
+  app.enableCors({
+    origin: corsOrigins.length > 0 ? corsOrigins : ['http://localhost:3000'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
   });
 
   app.enableVersioning({
@@ -33,7 +54,6 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  const configService = app.get(ConfigService);
   await app.listen(configService.get<number>('PORT')!);
 }
 void bootstrap();

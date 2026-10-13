@@ -1,75 +1,48 @@
-import { lireJSON, ecrireJSON } from '../utils/file.Json';
-import { generateId } from '../utils/id.util';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { Appreciation } from './entities/appreciation.entity';
-import { obtenirCheminDonnees } from '../location/../config/data-path.util';
+import { generateId } from '../utils/id.util';
 
 const PREFIXE_ID = 'apr';
 
-export async function lireAppreciations(): Promise<Appreciation[]> {
-    return lireJSON<Appreciation>(obtenirCheminDonnees('appreciation.json'));
-}
+@Injectable()
+export class AppreciationRepository {
+    constructor(
+        @InjectModel(Appreciation.name) private readonly appreciationModel: Model<Appreciation>,
+    ) {}
 
-export async function ecrireAppreciations(appreciations: Appreciation[]): Promise<void> {
-    return ecrireJSON<Appreciation>(obtenirCheminDonnees('appreciation.json'), appreciations);
-}
+    async findAll(): Promise<Appreciation[]> {
+        return this.appreciationModel.find().exec();
+    }
 
-export async function ajouterAppreciation(
-    donnees: Omit<Appreciation, 'id' | 'createdAt' | 'updatedAt'>
-): Promise<Appreciation> {
-    const appreciations = await lireAppreciations();
-    const maintenant = new Date();
+    async findByPlaceId(placeId: string): Promise<Appreciation[]> {
+        return this.appreciationModel.find({ placeId }).exec();
+    }
 
-    const nouvelleAppreciation: Appreciation = {
-        ...donnees,
-        id: generateId(PREFIXE_ID),
-        createdAt: maintenant,
-        updatedAt: maintenant,
-    };
+    async findById(id: string): Promise<Appreciation | null> {
+        return this.appreciationModel.findOne({ id }).exec();
+    }
 
-    appreciations.push(nouvelleAppreciation);
-    await ecrireAppreciations(appreciations);
+    async create(
+        donnees: Pick<Appreciation, 'placeId' | 'authorName' | 'rating' | 'comment'>,
+    ): Promise<Appreciation> {
+        const nouvelleAppreciation = new this.appreciationModel({
+            ...donnees,
+            id: generateId(PREFIXE_ID),
+        });
+        return nouvelleAppreciation.save();
+    }
 
-    return nouvelleAppreciation;
-}
+    async update(
+        id: string,
+        donnees: Partial<Omit<Appreciation, 'id' | 'createdAt' | 'placeId'>>,
+    ): Promise<Appreciation | null> {
+        return this.appreciationModel.findOneAndUpdate({ id }, donnees, { new: true }).exec();
+    }
 
-
-export async function lireAppreciationsParLieu(placeId: string): Promise<Appreciation[]> {
-    const toutes = await lireAppreciations();
-    return toutes.filter((a) => a.placeId === placeId);
-}
-
-export async function trouverAppreciationParId(id: string): Promise<Appreciation | undefined> {
-    const appreciations = await lireAppreciations();
-    return appreciations.find((a) => a.id === id);
-}
-
-export async function mettreAJourAppreciation(
-    id: string,
-    donnees: Partial<Omit<Appreciation, 'id' | 'createdAt' | 'placeId'>>
-): Promise<Appreciation | undefined> {
-    const appreciations = await lireAppreciations();
-    const index = appreciations.findIndex((a) => a.id === id);
-    if (index === -1) return undefined;
-
-    const appreciationMiseAJour: Appreciation = {
-        ...appreciations[index],
-        ...donnees,
-        updatedAt: new Date(),
-    };
-
-    appreciations[index] = appreciationMiseAJour;
-    await ecrireAppreciations(appreciations);
-
-    return appreciationMiseAJour;
-}
-
-export async function supprimerAppreciation(id: string): Promise<boolean> {
-    const appreciations = await lireAppreciations();
-    const index = appreciations.findIndex((a) => a.id === id);
-    if (index === -1) return false;
-
-    appreciations.splice(index, 1);
-    await ecrireAppreciations(appreciations);
-
-    return true;
+    async delete(id: string): Promise<boolean> {
+        const resultat = await this.appreciationModel.findOneAndDelete({ id }).exec();
+        return resultat !== null;
+    }
 }

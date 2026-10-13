@@ -1,70 +1,44 @@
-import { lireJSON, ecrireJSON } from '../utils/file.Json';
-import { generateId } from '../utils/id.util';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { Location } from './entities/location.entity';
-import { obtenirCheminDonnees } from '../config/data-path.util';
+import { generateId } from '../utils/id.util';
 
 const PREFIXE_ID = 'loc';
 
-export async function lireLocations(): Promise<Location[]> {
-    return lireJSON<Location>(obtenirCheminDonnees('location.json'));
-}
+@Injectable()
+export class LocationRepository {
+    constructor(@InjectModel(Location.name) private readonly locationModel: Model<Location>) {}
 
-export async function ecrireLocations(locations: Location[]): Promise<void> {
-    return ecrireJSON<Location>(obtenirCheminDonnees('location.json'), locations);
-}
+    async findAll(): Promise<Location[]> {
+        return this.locationModel.find().exec();
+    }
 
-export async function ajouterLocation(
-    donnees: Omit<Location, 'id' | 'createdAt' | 'updatedAt' | 'averageRating' | 'reviewCount'>
-): Promise<Location> {
-    const locations = await lireLocations();
-    const maintenant = new Date();
+    async findById(id: string): Promise<Location | null> {
+        return this.locationModel.findOne({ id }).exec();
+    }
 
-    const nouvelleLocation: Location = {
-        ...donnees,
-        id: generateId(PREFIXE_ID),
-        averageRating: null,
-        reviewCount: 0,
-        createdAt: maintenant,
-        updatedAt: maintenant,
-    };
+    async create(
+        donnees: Pick<Location, 'name' | 'description' | 'category' | 'address' | 'services' | 'status'>,
+    ): Promise<Location> {
+        const nouvelleLocation = new this.locationModel({
+            ...donnees,
+            id: generateId(PREFIXE_ID),
+            averageRating: null,
+            reviewCount: 0,
+        });
+        return nouvelleLocation.save();
+    }
 
-    locations.push(nouvelleLocation);
-    await ecrireLocations(locations);
+    async update(
+        id: string,
+        donnees: Partial<Omit<Location, 'id' | 'createdAt'>>,
+    ): Promise<Location | null> {
+        return this.locationModel.findOneAndUpdate({ id }, donnees, { new: true }).exec();
+    }
 
-    return nouvelleLocation;
-}
-export async function trouverLocationParId(id: string): Promise<Location | undefined> {
-    const locations = await lireLocations();
-    return locations.find((l) => l.id === id);
-}
-
-export async function mettreAJourLocation(
-    id: string,
-    donnees: Partial<Omit<Location, 'id' | 'createdAt'>>
-): Promise<Location | undefined> {
-    const locations = await lireLocations();
-    const index = locations.findIndex((l) => l.id === id);
-    if (index === -1) return undefined;
-
-    const locationMiseAJour: Location = {
-        ...locations[index],
-        ...donnees,
-        updatedAt: new Date(),
-    };
-
-    locations[index] = locationMiseAJour;
-    await ecrireLocations(locations);
-
-    return locationMiseAJour;
-}
-
-export async function supprimerLocation(id: string): Promise<boolean> {
-    const locations = await lireLocations();
-    const index = locations.findIndex((l) => l.id === id);
-    if (index === -1) return false;
-
-    locations.splice(index, 1);
-    await ecrireLocations(locations);
-
-    return true;
+    async delete(id: string): Promise<boolean> {
+        const resultat = await this.locationModel.findOneAndDelete({ id }).exec();
+        return resultat !== null;
+    }
 }
