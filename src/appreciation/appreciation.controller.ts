@@ -4,6 +4,7 @@ import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiQuery } from '@nestjs/
 import { AppreciationService } from './appreciation.service';
 import { CreateAppreciationDto } from './dto/create-appreciation.dto';
 import { UpdateAppreciationDto } from './dto/update-appreciation.dto';
+import { FindAllAppreciationsDto } from './dto/find-all-appreciations.dto';
 import { Appreciation } from './entities/appreciation.entity';
 import { ProblemDetailsDto } from '../common/dto/problem-details.dto';
 
@@ -30,8 +31,8 @@ export class AppreciationController {
   @ApiOperation({ summary: "Lister les appréciations, avec filtre optionnel par endroit" })
   @ApiQuery({ name: 'placeId', required: false, description: "Filtrer les appréciations d'un endroit précis" })
   @ApiResponse({ status: 200, description: 'Liste des appréciations', type: [Appreciation] })
-  findAll(@Query('placeId') placeId?: string) {
-    return this.appreciationService.findAll(placeId);
+  findAll(@Query() query: FindAllAppreciationsDto) {
+    return this.appreciationService.findAll(query.placeId);
   }
 
   @Get(':id')

@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min, validateSync } from 'class-validator';
+import { IsBooleanString, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min, validateSync } from 'class-validator';
 
 class EnvironmentVariables {
     @IsInt()
@@ -18,6 +18,32 @@ class EnvironmentVariables {
     @IsOptional()
     @IsString()
     CORS_ORIGINS?: string;
+
+    @IsOptional()
+    @IsBooleanString()
+    HTTPS_ENABLED?: string;
+
+    @IsOptional()
+    @IsString()
+    SSL_KEY_PATH?: string;
+
+    @IsOptional()
+    @IsString()
+    SSL_CERT_PATH?: string;
+
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Max(65535)
+    HTTP_REDIRECT_PORT?: number;
+
+    @IsOptional()
+    @IsString()
+    JWT_SECRET?: string;
+
+    @IsOptional()
+    @IsString()
+    JWT_EXPIRES_IN?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

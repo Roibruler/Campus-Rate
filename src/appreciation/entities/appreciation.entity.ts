@@ -41,3 +41,5 @@ export class Appreciation extends Document {
 }
 
 export const AppreciationSchema = SchemaFactory.createForClass(Appreciation);
+
+AppreciationSchema.index({ placeId: 1, authorName: 1 }, { unique: true });

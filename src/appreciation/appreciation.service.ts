@@ -42,10 +42,7 @@ export class AppreciationService {
   }
 
   async update(id: string, updateAppreciationDto: UpdateAppreciationDto) {
-    // placeId n'est jamais modifiable, même si le client l'envoie dans le body
-    const { placeId: _placeId, ...donneesModifiables } = updateAppreciationDto;
-
-    const appreciation = await this.appreciationRepository.update(id, donneesModifiables);
+    const appreciation = await this.appreciationRepository.update(id, updateAppreciationDto);
     if (!appreciation) {
       throw new NotFoundException(`Aucune appréciation trouvée avec l'id ${id}`);
     }
@@ -66,14 +63,10 @@ export class AppreciationService {
   }
 
   private async recalculerStatistiques(placeId: string): Promise<void> {
-    const appreciations = await this.appreciationRepository.findByPlaceId(placeId);
-    const reviewCount = appreciations.length;
-    const averageRating =
-      reviewCount === 0
-        ? null
-        : Math.round(
-          (appreciations.reduce((somme, a) => somme + a.rating, 0) / reviewCount) * 100,
-        ) / 100;
+    const [resultat] = await this.appreciationRepository.aggregerStatistiques(placeId);
+
+    const reviewCount = resultat?.reviewCount ?? 0;
+    const averageRating = reviewCount === 0 ? null : Math.round(resultat.averageRating * 100) / 100;
 
     await this.locationModel.findOneAndUpdate({ id: placeId }, { averageRating, reviewCount }).exec();
   }

@@ -28,7 +28,7 @@ export class Location extends Document {
     description: string;
 
     @ApiProperty({ enum: LocationCategory, example: LocationCategory.STUDY_SPACE })
-    @Prop({ type: String, enum: LocationCategory, required: true })
+    @Prop({ type: String, enum: LocationCategory, required: true, index: true })
     category: LocationCategory;
 
     @ApiProperty({ example: 'Pavillon A, local A-210' })

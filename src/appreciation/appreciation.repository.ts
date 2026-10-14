@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Appreciation } from './entities/appreciation.entity';
 import { generateId } from '../utils/id.util';
 
 const PREFIXE_ID = 'apr';
+const CODE_ERREUR_DUPLICATION_MONGO = 11000;
 
 @Injectable()
 export class AppreciationRepository {
@@ -31,7 +32,17 @@ export class AppreciationRepository {
             ...donnees,
             id: generateId(PREFIXE_ID),
         });
-        return nouvelleAppreciation.save();
+
+        try {
+            return await nouvelleAppreciation.save();
+        } catch (error) {
+            if (this.estErreurDuplicationMongo(error)) {
+                throw new ConflictException(
+                    `${donnees.authorName} a déjà publié une appréciation pour cet endroit (placeId: ${donnees.placeId}).`,
+                );
+            }
+            throw error;
+        }
     }
 
     async update(
@@ -44,5 +55,31 @@ export class AppreciationRepository {
     async delete(id: string): Promise<boolean> {
         const resultat = await this.appreciationModel.findOneAndDelete({ id }).exec();
         return resultat !== null;
+    }
+
+    async aggregerStatistiques(
+        placeId: string,
+    ): Promise<Array<{ reviewCount: number; averageRating: number }>> {
+        return this.appreciationModel
+            .aggregate<{ reviewCount: number; averageRating: number }>([
+                { $match: { placeId } },
+                {
+                    $group: {
+                        _id: '$placeId',
+                        reviewCount: { $sum: 1 },
+                        averageRating: { $avg: '$rating' },
+                    },
+                },
+            ])
+            .exec();
+    }
+
+    private estErreurDuplicationMongo(error: unknown): boolean {
+        return (
+            typeof error === 'object' &&
+            error !== null &&
+            'code' in error &&
+            (error as { code: unknown }).code === CODE_ERREUR_DUPLICATION_MONGO
+        );
     }
 }
